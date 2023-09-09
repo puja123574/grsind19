@@ -1,0 +1,65 @@
+
+To automate both Test Case 1 and Test Case 2, we can use Python, Selenium for UI automation, and BeautifulSoup for parsing the HTML content. Here's a clean and modular code that performs both test cases with error handling:
+
+python
+Copy code
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+
+# Function to validate the heading in Test Case 1
+def validate_heading(driver):
+    try:
+        heading = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//div[@class='d-flex justify-content-between']/h2"))
+        )
+        return heading.text == "25 of 2875 Transactions"
+    except Exception as e:
+        return False
+
+# Function to extract transactions in Test Case 2
+def extract_transactions(driver):
+    try:
+        transactions = []
+        transaction_elements = driver.find_elements(By.XPATH, "//div[@class='transaction-item']")
+        for transaction_element in transaction_elements:
+            tx_hash = transaction_element.find_element(By.XPATH, ".//a[contains(@href, '/tx/')]").text
+            input_count = len(transaction_element.find_elements(By.XPATH, ".//div[contains(@class, 'input')]"))
+            output_count = len(transaction_element.find_elements(By.XPATH, ".//div[contains(@class, 'output')]"))
+            transactions.append({"hash": tx_hash, "input_count": input_count, "output_count": output_count})
+        return transactions
+    except Exception as e:
+        return []
+
+# Initialize the WebDriver (you should specify the path to your WebDriver executable)
+driver = webdriver.Chrome(executable_path='/path/to/chromedriver')
+
+# Open the website
+driver.get("https://blockstream.info/block/000000000000000000076c036ff5119e5a5a74df77abf64203473364509f7732")
+
+try:
+    # Test Case 1: Validate the heading
+    if validate_heading(driver):
+        print("Test Case 1: Heading validation successful")
+    else:
+        print("Test Case 1: Heading validation failed")
+
+    # Test Case 2: Extract and print transactions with 1 input and 2 outputs
+    transactions = extract_transactions(driver)
+    if transactions:
+        print("Test Case 2: Transactions with 1 input and 2 outputs:")
+        for transaction in transactions:
+            if transaction["input_count"] == 1 and transaction["output_count"] == 2:
+                print(f"Transaction Hash: {transaction['hash']}")
+
+except Exception as e:
+    print("An error occurred:", e)
+
+finally:
+    # Close the browser
+    driver.quit()
+Make sure to replace '/path/to/chromedriver' with the actual path to your Chrome WebDriver executable.
+
+This code defines two functions for each test case, and it performs error handling for both cases. It first validates the heading in Test Case 1 and then extracts and prints the transactions meeting the criteria in Test Case 2.
